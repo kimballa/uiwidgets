@@ -3,7 +3,7 @@
 #ifndef __UI_WIDGETS_H
 #define __UI_WIDGETS_H
 
-#include <cstdint>
+#include <stdint.h>
 
 #include <TFT_eSPI.h>
 
