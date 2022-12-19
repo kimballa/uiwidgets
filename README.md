@@ -197,10 +197,10 @@ StrLabel
 --------
 Subclass of `Label`. Displays a string.
 
-* `void setText(const char *str)`: Sets the text to display in the Button to be backed by `str`. The
+* `void setText(const char *str)`: Sets the text to display in the label to be backed by `str`. The
   lifetime of `str` must not end before the `StrLabel` itself goes out of scope; StrLabel does not make
   a copy of this string.
-* `void setText(const String &str)`: Sets the text to display in the Button to be backed by `str`. The
+* `void setText(const String &str)`: Sets the text to display in the label to be backed by `str`. The
   lifetime of `str` must not end before the `StrLabel` itself goes out of scope; StrLabel does not make
   a copy of this string.
 
@@ -218,12 +218,12 @@ Subclass of `Label`. Displays a float.
 * `void setMaxDecimalDigits(uint8_t digits)`: Specifies the maximum number of digits to the right of
   the `.`  to render. `TFT_eSPI` limits this to at most 7.
 
-Button
-------
-A selectable button with text in it.
+UIButton
+--------
+A selectable visual button with text in it.
 
-* `void setText(const char *str)`: Sets the text to display in the Button to be backed by `str`. The
-  lifetime of `str` must not end before the `Button` itself goes out of scope; Button does not make
+* `void setText(const char *str)`: Sets the text to display in the UIButton to be backed by `str`. The
+  lifetime of `str` must not end before the `UIButton` itself goes out of scope; UIButton does not make
   a copy of this string.
 * `void setFont(int fontId)`: Specify the id of a font within the font library built into `TFT_eSPI`
   to use for text rendering. Note that `TFT_eSPI` uses conditional compilation and `#define` flags
@@ -235,7 +235,7 @@ A selectable button with text in it.
 > **Tip:** You can render a button being "clicked" with `myScreen.renderWidget(&myButton,
 > RF_FOCUSED);`
 
-Note that buttons **ignore** background and border; a `Button` is essentially a `StrLabel` with
+Note that buttons **ignore** background and border; a `UIButton` is essentially a `StrLabel` with
 the styles `setBackground(BG_NONE); setBorder(BORDER_ROUNDED);` forcibly applied.
 
 VScroll
