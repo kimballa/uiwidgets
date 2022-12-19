@@ -3,7 +3,7 @@
 #ifndef _UIW_VSCROLL_H
 #define _UIW_VSCROLL_H
 
-#include "../collections/collections.h"
+#include <tiny-collections.h>
 #include "screen.h"
 
 constexpr int16_t VSCROLL_SCROLLBAR_W = 12; // width of the rendered scrollbar itself
