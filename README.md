@@ -178,20 +178,9 @@ operational.
 * `void setColumn(uint16_t colNum, UIWidget *widget, int16_t width)`: Specify the widget that goes in
   column `colNum` (0 is the first/left col, `numCols-1` is the right/last col) as well as its width.
   Blank columns may be specified with `widget=NULL`.
-* `setColumnWidth(uint16_t rowNum, int16_t height)`: Control the width of a given column.
-* `setFixedWidth(int16_t height)`: Apply a particular width value to all existing cols. Further
+* `setColumnWidth(uint16_t rowNum, int16_t width)`: Control the width of a given column.
+* `setFixedWidth(int16_t width)`: Apply a particular width value to all existing cols. Further
   column updates with `setColumn()` will override this.
-
-Button
-------
-A selectable button with text in it.
-
-* `void setText(const char *str)`: Sets the text to display in the Button to be backed by `str`. The
-  lifetime of `str` must not end before the `Button` itself goes out of scope; Button does not make
-  a copy of this string.
-
-> **Tip:** You can render a button being "clicked" with `myScreen.renderWidget(&myButton,
-> RF_FOCUSED);`
 
 Label
 --------
@@ -229,6 +218,26 @@ Subclass of `Label`. Displays a float.
 * `void setMaxDecimalDigits(uint8_t digits)`: Specifies the maximum number of digits to the right of
   the `.`  to render. `TFT_eSPI` limits this to at most 7.
 
+Button
+------
+A selectable button with text in it.
+
+* `void setText(const char *str)`: Sets the text to display in the Button to be backed by `str`. The
+  lifetime of `str` must not end before the `Button` itself goes out of scope; Button does not make
+  a copy of this string.
+* `void setFont(int fontId)`: Specify the id of a font within the font library built into `TFT_eSPI`
+  to use for text rendering. Note that `TFT_eSPI` uses conditional compilation and `#define` flags
+  to include or exclude different fonts, so this must match the number for a font that you have
+  included in your build. Note also that this does not yet support the "FreeFont" fonts, only the
+  numbered ones.
+* `void setColor(uint16_t color)`: Set the foreground text color.
+
+> **Tip:** You can render a button being "clicked" with `myScreen.renderWidget(&myButton,
+> RF_FOCUSED);`
+
+Note that buttons **ignore** background and border; a `Button` is essentially a `StrLabel` with
+the styles `setBackground(BG_NONE); setBorder(BORDER_ROUNDED);` forcibly applied.
+
 VScroll
 -------
 A container that holds a variable number of items, more than can be shown on the screen.
@@ -250,16 +259,16 @@ Content quantification:
 * `size_t bottomIdx()`: The index of the entry one past the bottom of the visible content window.
 
 Managing the selection:
-* `void setSelection(size_t idx)`: Set the index of the selected widget.
-* `selectUp()`: Select the previous element.
-* `selectDown()`: Select the next element.
-* `size_t selectIdx()`: The index of the selected widget.
-* `UIWidget *getSelected()`: Get the selected widget itself.
+* `bool setSelection(size_t idx)`: Set the index of the selected widget. Returns true on success.
+* `bool selectUp()`: Select the previous element. Returns true on success.
+* `bool selectDown()`: Select the next element. Returns true on success.
+* `size_t selectIdx()`: The index of the selected widget or `NO_SELECTION`.
+* `UIWidget *getSelected()`: Get the selected widget itself or `NULL`.
 
+Visual control:
 * `setItemHeight(int16_t newHeight)`: Set the row height available to each child widget to render
   in. Unlike `Rows`, the item height for VScroll children is set once and consistently applied to
   all child widgets including those added after the call to `setItemHeight()`.
-
 * `void setContentBackground(uitn16_t color)`: Set the background color for the content area.
 * `void setContentBackground(uitn16_t color)`: Set the background color for the scrollbar area.
 * Note that `VScroll` does **not** respect the general `UIWidget::setBackground()` method.
@@ -306,7 +315,11 @@ These must implement the following methods:
 * `virtual void cascadeBoundingBox()` - After your own bounding box is updated by your parent
   widget, the parent will invoke `childWidget.cascadeBoundingBox()` to notify you of the changed
   bounding box. Within this method, you should then call `setBoundingBox(x, y, w, h)` as appropriate
-  on each of your own child widgets.
+  on each of your own child widgets. In general, container-like objects should set the bounding box
+  of their child objects to begin as far to the left and top of the screen / their own bounding box
+  (i.e., closer to x=0, y=0) as possible, and make the child object as wide or as tall as possible
+  within the confines of your own bounding box, minus any porcelain from border, padding, or other
+  internal graphical elements.
 * `virtual int16_t getContentWidth(TFT_eSPI &lcd) const` - Return the minimum width required to draw
   your content plus any border/padding.
 * `virtual int16_t getContentHeight(TFT_eSPI &lcd) const` - Return the minimum height required to
