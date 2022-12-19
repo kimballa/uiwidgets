@@ -211,6 +211,8 @@ void UIWidget::getChildAreaBoundingBox(int16_t &childX, int16_t &childY, int16_t
 int16_t UIWidget::addBorderWidth(int16_t contentWidth) const {
   // Given the width of the interior content as an arg, pad it as required to account
   // for our border.
+  //
+  // TODO(aaron): Also add user padding?
 
   if ((_border_flags & BORDER_ROUNDED) == BORDER_ROUNDED) {
     contentWidth += 2 * BORDER_ROUNDED_INNER_MARGIN;
@@ -230,6 +232,8 @@ int16_t UIWidget::addBorderWidth(int16_t contentWidth) const {
 int16_t UIWidget::addBorderHeight(int16_t contentHeight) const {
   // Given the height of the interior content as an arg, pad it as required to account
   // for our border.
+  //
+  // TODO(aaron): Also add user padding?
 
   if ((_border_flags & BORDER_ROUNDED) == BORDER_ROUNDED) {
     contentHeight += 2 * BORDER_ROUNDED_INNER_MARGIN;

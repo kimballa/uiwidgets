@@ -3,7 +3,7 @@
 uiwidgets -- Mini UI widget library
 ===================================
 
-A UI widget library for drawing on an LCD in Arduino. This library uses the `TFT_eSPI` module for
+A UI widget library for drawing on an LCD in Arduino. This library uses the `TFT_eSPI` library for
 rendering to a screen; however, it provides a UI-widget-centric way of describing content rather
 than requiring that you performed fine-grained rendering direction, and assists with automatic
 layout of content elements on the screen.
@@ -11,21 +11,21 @@ layout of content elements on the screen.
 This depends on the `Seeed_Arduino_LCD` or `TFT_eSPI` library for the underlying
 display control.
 
-* https://github.com/Seeed-Studio/Seeed\_Arduino\_LCD/
-* https://github.com/Bodmer/TFT\_eSPI
+* https://github.com/Seeed-Studio/Seeed_Arduino_LCD/
+* https://github.com/Bodmer/TFT_eSPI
 
 Compiling
 =========
 
 Add the `UIWidgets` library to your Arduino sketch in the IDE.
 
-If you are compiling on the command line:
+Or, if you are compiling on the command line:
 
 ```
 make all install
 ```
 
-`make` depends on my Arduino Makefile (https://github.com/kimballa/arduino-makefile).
+Using `make` depends on my Arduino Makefile (https://github.com/kimballa/arduino-makefile).
 
 If building with a Makefile, you must also download, compile, and `make install` any dependency
 libraries. See the `libs` line in the `Makefile` for a complete list of dependencies.
@@ -35,10 +35,10 @@ Layout System
 
 The layout of widgets is based on a nesting system. The top-most visible object is always a
 `Screen`. You can have multiple `Screens`, but only one will show at a time. The Screen can hold one
-element, which may be something that visibly displays, like a `TextLabel`, or it could be a `Rows`
-or `Cols`; these can be configured to have N items across or down (which may be more `Rows` or
-`Cols`). Each object has an x, y, width, and height.  As containing objects are moved by layout
-changes, they cascade the position and size offsets to their children.
+element, which may be something that visibly displays, like a `StrLabel`, or it could be a `Rows`
+or `Cols`; these can be configured to have N items down or across (which may be more `Rows` or
+`Cols`). Each object has an x, y, width, and height specified in pixels.  As containing objects are
+moved by layout changes, they cascade the position and size offsets to their children.
 
 In general, widgets expand to fill the space available to them. Laying out multiple widgets can be
 accomplished by nesting `Rows` and `Cols` objects to make a grid, where each row or column therein
@@ -75,6 +75,8 @@ Relevant methods:
   screen directly under the bounding box of `w`; `w` is usually nested inside the top-level widget,
   rather than indicating the top-level widget itself.
 * `getWidth()`, `getHeight()`: Return the size of the screen
+* `void setBackground(uint16_t backgroundColor`: Specify a background color to apply to the entire
+  screen.
 
 UIWidget
 --------
@@ -89,7 +91,7 @@ with widgets. For example, all widgets have the following methods you can call:
 * `setPadding(int16_t padL, int16_t padR, int16_t padTop, int16_t padBottom)`: Sets interior margin
   padding, in pixels, between the edge of the widget's rect and its inner content area.
   User-specified padding is additive to padding automatically added in the presence of a border
-  created by `setBorder()`.
+  created by `setBorder()`. Your padding parameters _may_ be negative.
 * `getX()`, `getY()`, `getWidth()`, `getHeight()`: Each describes one parameter of the widget
   bounding box.
 * `void getRect(int16_t &cx, int16_t &cy, int16_t &cw, int16_t ch)`: Get all bounding box
@@ -188,7 +190,7 @@ A selectable button with text in it.
   lifetime of `str` must not end before the `Button` itself goes out of scope; Button does not make
   a copy of this string.
 
-> **Tip**: You can render a button being "clicked" with `myScreen.renderWidget(&myButton,
+> **Tip:** You can render a button being "clicked" with `myScreen.renderWidget(&myButton,
 > RF_FOCUSED);`
 
 Label
@@ -287,8 +289,53 @@ _Not yet implemented._
 A collection of text lines that can each be selected.
 (TODO: Does this take over the whole screen?)
 
+Implementing your own widgets
+=============================
+
+If you want to create more widgets unique to your project, you can create subclasses of `UIWidget`.
+
+These must implement the following methods:
+
+* `virtual void render(TFT_eSPI &lcd, uint32_t renderFlags)` - Render the widget itself using the
+  drawing methods of `lcd`. You must stick to the area of the screen specified by `UIWidget::getRect()`.
+* `virtual bool redrawChildWidget(UIWidget *widget, TFT_eSPI &lcd, uint32_t renderFlags=0)` - If
+  `widget == this`, act like `render()`; otherwise, re-render any of your own content that falls within the
+  bounding box of `widget`. If you have child widgets, you should test if
+  `someChild->containsWidget(widget)` and if true for each/any of them, call `redrawChildWidget()`
+  recursively.
+* `virtual void cascadeBoundingBox()` - After your own bounding box is updated by your parent
+  widget, the parent will invoke `childWidget.cascadeBoundingBox()` to notify you of the changed
+  bounding box. Within this method, you should then call `setBoundingBox(x, y, w, h)` as appropriate
+  on each of your own child widgets.
+* `virtual int16_t getContentWidth(TFT_eSPI &lcd) const` - Return the minimum width required to draw
+  your content plus any border/padding.
+* `virtual int16_t getContentHeight(TFT_eSPI &lcd) const` - Return the minimum height required to
+  draw your content plus any border/padding.
+
+Helpful inherited methods
+-------------------------
+
+`UIWidget` contanis many helper methods likely useful to you:
+
+* `void drawBackground(TFT_eSPI &lcd, uint32_t renderFlags)`: Draw the background color of your
+  widget, if any. Typically called at the start of `render()`.
+* `void drawBorder(TFT_eSPI &lcd, uint32_t renderFlags)`: Draw the border of your widget, if any.
+  Typically called just after `drawBackground()` at the start of `render()`.
+* `drawBackgroundUnderWidget(UIWidget *widget, TFT_eSPI &lcd, uint32_t renderFlags=0)`: If your
+  widget has a background color set, draw the background color under the rectangle specified by
+  `widget`'s bounding box. Typically used within `redrawChildWidget()` instead of
+  `drawBackground()`, as there is substantial performance savings to redrawing only the minimal part
+  of the screen required versus redrawing the whole thing.
+* `void getChildAreaBoundingBox(int16_t &childX, int16_t &childY, int16_t &childW, int16_t
+  &childH)`: Returns the bounding box (in pixels) of the area where you should draw your content.
+  This may be smaller than `getRect()`, as it accounts for space taken up by a border (if set) and
+  user-specified padding from `setPadding()`.
+* `int16_t addBorderWidth(int16_t contentWidth)`: Returns `contentWidth` plus any pixel width
+  required to render borders or account for user-specified padding. Used in `getContentWidth()`.
+* `int16_t addBorderHeight(int16_t contentHeight)`: Returns `contentHeight` plus any pixel height
+  required to render borders or account for user-specified padding. Used in `getContentHeight()`.
 
 License
--------
+=======
 
 This project is licensed under the BSD 3-Clause license. See LICENSE.txt for complete details.

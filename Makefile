@@ -26,6 +26,8 @@ use_header_suffix_dir := 1
 # errors in the link phase about missing symbols.
 libs := tiny-collections seeed_arduino_lcd adafruit_zerodma
 
+include_dirs += $(arch_include_root)/seeed_arduino_lcd
+
 # List all directories of source files. The current directory '.' is included by default.
 src_dirs := src
 
@@ -38,7 +40,7 @@ src_dirs := src
 # path, and the mcu-specific lib dir is already on the -L path.
 
 # Add any other compilation flags necessary:
-# XFLAGS += (...)
+XFLAGS += -Wall
 
 # Finally, include the main makefile library.
 # This creates targets like 'all', 'install', 'upload', 'clean'...
